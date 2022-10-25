@@ -16,5 +16,6 @@ async def start_db():
     Base.metadata.create_all(bind=engine)
 
 
+
 if __name__  == "__main__":
     uvicorn.run('main:app', port=8088, log_level='info')

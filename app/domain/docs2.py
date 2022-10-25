@@ -1,12 +1,8 @@
 from docarray import Document, DocumentArray
 
-from app.domain.nn import model, tokenizer
+from app.domain.nn import model_rubert, tokenizer_rubert
 from app.domain.utils import create_dir_if_not_exists, read_json
-from app.schemas import Bible
 from app.settings import settings
-
-def collate_fn(da):
-    return tokenizer(da.texts, return_tensors="pt", truncation=True, padding=True)
 
 
 
@@ -31,7 +27,7 @@ def index():
     for id, text in data_json.items():
         document_array.append(Document(text=text, id=id))
 
-    document_array.embed(model, collate_fn=collate_fn)
+    document_array.embed(model_rubert, collate_fn=collate_fn)
 
     print(document_array.summary())
 
@@ -55,13 +51,13 @@ def query(q: str):
 
 
     query = Document(text=q)
-    da_query = DocumentArray([Document(text=q)]).embed(model, collate_fn=collate_fn)
+    da_query = DocumentArray([Document(text=q)]).embed(model_rubert, collate_fn=collate_fn)
 
-    res = document_array.find(da_query,  limit=1)
+    res = document_array.find(da_query, metric='cosine', limit=1)
     print(q)
     res[0].summary()
 
-    return res[0][0, 'text']
+    return res[0][0]
 
 
 if  __name__ == "__main__":
@@ -70,10 +66,12 @@ if  __name__ == "__main__":
         'бог назвал твердь небом, было утро и был вечер',
         "только плоти с душею ее, с кровью ее, не ешьте;",
         "И сказал Бог Ною и сынам его с ним:",
+        "Он сказал: голос Твой я услышал в раю, и убоялся, потому что я наг, и скрылся",
+
     ]
 
     for q in queries:
         answer  = query(q)
-        print(f'Answer: {answer}')
+        print(f'Answer: {answer.text} -- {answer.scores}')
 
     # index()

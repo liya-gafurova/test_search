@@ -18,8 +18,8 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 
         **Parameters**
 
-        * `model`: A SQLAlchemy model class
-        * `schema`: A Pydantic model (schema) class
+        * `model_rubert`: A SQLAlchemy model_rubert class
+        * `schema`: A Pydantic model_rubert (schema) class
         """
         self.model = model
 

@@ -40,3 +40,10 @@ class Book(BaseModel):
 class Bible(BaseModel):
     Translation: Optional[str]
     Books: Optional[list[Book]]
+
+
+class BibleFlat(BaseModel):
+    book_id: int
+    chapter_id: int
+    verse_id: int
+    verse_text: str

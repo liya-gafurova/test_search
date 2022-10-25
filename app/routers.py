@@ -2,10 +2,12 @@ from typing import Optional
 
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 from starlette import status
+from starlette.responses import Response
 
 from app.crud.sources import crud_sources
-from app.deps import get_db
-from app.domain.utils import get_file_url, generate_uuid, save_file, read_json, get_bible, get_small_bible, save_json
+from app.deps import get_db, get_searching_instruments, SearchingEntity
+from app.domain.commands import query_command, get_bible, get_small_bible
+from app.domain.utils import get_file_url, generate_uuid, save_file, read_json,  save_json
 from app.schemas import IdType, SourceDB, Bible
 
 router_source = APIRouter()
@@ -45,9 +47,13 @@ async def get_source(id: IdType, db = Depends(get_db)):
 
 
 @router_source.post('/{id}/index')
-async def index_data(id: IdType, db=Depends(get_db)):
-    # TODO
-    pass
+async def index_data(id: IdType, db=Depends(get_db), searching_inst = Depends(get_searching_instruments)):
+    small_bible_path = "/home/lia/PycharmProjects/bible_search/data/SMALL_bible_large_20221024232834.json"
+    data: dict = read_json(small_bible_path)
+    bible: Bible = get_bible(data)
+
+    index_data()
+
 
 
 @router_source.post('/{id}/create/small')
@@ -73,10 +79,16 @@ async def get_small_bible_version(
 
 
 @router_source.post('/{id}/indexed/delete')
-async def delete_indexed_data(id: IdType):
-    pass
+async def delete_indexed_data(id: Optional[IdType], searching_inst: SearchingEntity = Depends(get_searching_instruments)):
+
+    searching_inst.indexed_data.clear()
+    searching_inst.indexed_data.summary()
+
+    return Response(status_code=status.HTTP_200_OK)
 
 
 @router_query.post('/send')
-async def send_query(query: str):
-    pass
+async def send_query(query: str, searching_instruments = Depends(get_searching_instruments)):
+    answer = query_command(query, searching_instruments)
+
+    return answer
