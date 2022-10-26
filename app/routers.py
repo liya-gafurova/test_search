@@ -6,9 +6,9 @@ from starlette.responses import Response
 
 from app.crud.sources import crud_sources
 from app.deps import get_db, get_searching_instruments, SearchingEntity
-from app.domain.commands import query_command, get_bible, get_small_bible
+from app.domain.commands import query_command, get_bible, get_small_bible, index_command
 from app.domain.utils import get_file_url, generate_uuid, save_file, read_json,  save_json
-from app.schemas import IdType, SourceDB, Bible
+from app.schemas import IdType, SourceDB, Bible, BibleFlat
 
 router_source = APIRouter()
 router_query = APIRouter()
@@ -52,8 +52,16 @@ async def index_data(id: IdType, db=Depends(get_db), searching_inst = Depends(ge
     data: dict = read_json(small_bible_path)
     bible: Bible = get_bible(data)
 
-    index_data()
+    verses = []
 
+    for b in bible.Books:
+        for c in b.Chapters:
+            for v in c.Verses:
+                verses.append(
+                    BibleFlat(verse_text=v.Text, book_id=b.BookId, chapter_id=c.ChapterId, verse_id=v.VerseId)
+                )
+
+    index_command(verses, searching_inst)
 
 
 @router_source.post('/{id}/create/small')

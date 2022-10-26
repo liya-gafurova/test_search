@@ -9,6 +9,6 @@ document_array_qdrant = DocumentArray(
             'host': settings.IP_ADDR,
             'port': '6333',
             'n_dim': 768,
-            'columns': [('text', 'str'), ('book_id', 'int'), ('chapter_id', 'int'), ('verse_id', 'int')]
+            'columns': {'text': 'str', 'book_id': 'int', 'chapter_id': 'int', 'verse_id': 'int'}
         },
     )

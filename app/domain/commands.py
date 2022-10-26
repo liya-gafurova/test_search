@@ -3,7 +3,7 @@ from typing import List
 from docarray import DocumentArray, Document
 
 from app.deps import SearchingEntity
-from app.schemas import Bible, Chapter, Book, BibleFlat
+from app.schemas import Bible, Chapter, Book, BibleFlat, ResponseDocs
 
 
 def get_bible(bible_json: dict) -> Bible:
@@ -49,20 +49,31 @@ def get_small_bible(
 
 
 def query_command(query_phrase: str, searching_entity: SearchingEntity):
-    searching_entity.indexed_data.summary()
 
     da_query = DocumentArray([Document(text=query_phrase)])
     da_query.embed(searching_entity.model, collate_fn=searching_entity.collate_fn)
 
     res: List[DocumentArray] = searching_entity.indexed_data.find(da_query, metric='cosine', limit=3)
 
-    res[0].summary()
+    answers = []
 
-    return res[0]
+    for doc in res[0]:
+        answers.append(
+            ResponseDocs(text=doc.text, similarity=doc.scores.get('cosine_similarity').value, **doc.tags, )
+        )
+
+    return answers
 
 
-def index_command(data: BibleFlat, searching_inst: SearchingEntity):
-    for id, text in data.items():
-        searching_inst.indexed_data.append(Document(text=text, id=id))
+def index_command(data: List[BibleFlat], searching_inst: SearchingEntity):
+    for bible_verse in data:
+        searching_inst.indexed_data.append(Document(
+            text=bible_verse.verse_text,
+            book_id=bible_verse.book_id,
+            chapter_id=bible_verse.chapter_id,
+            verse_id=bible_verse.verse_id
+        ))
 
     searching_inst.indexed_data.embed(searching_inst.model, collate_fn=searching_inst.collate_fn)
+
+

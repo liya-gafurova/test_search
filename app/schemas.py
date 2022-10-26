@@ -47,3 +47,12 @@ class BibleFlat(BaseModel):
     chapter_id: int
     verse_id: int
     verse_text: str
+
+
+class ResponseDocs(BaseModel):
+    text: str
+    similarity: float
+
+    book_id: Optional[int]
+    chapter_id: Optional[int]
+    verse_id: Optional[int]

@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     MODEL = "DeepPavlov/rubert-base-cased"
     COLLECTION_NAME = 'bible'
 
-    IP_ADDR = '192.168.88.223'
+    IP_ADDR = '192.168.88.222'
 
 
 settings = Settings()
