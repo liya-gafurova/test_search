@@ -8,7 +8,9 @@ document_array_qdrant = DocumentArray(
             'collection_name': settings.COLLECTION_NAME,
             'host': settings.IP_ADDR,
             'port': '6333',
-            'n_dim': 768,
+            'n_dim': 1024,
             'columns': {'text': 'str', 'book_id': 'int', 'chapter_id': 'int', 'verse_id': 'int'}
         },
     )
+
+

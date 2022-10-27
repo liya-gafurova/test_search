@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List
 
 from docarray import DocumentArray, Document
@@ -48,32 +49,83 @@ def get_small_bible(
     return new_bible_obj
 
 
-def query_command(query_phrase: str, searching_entity: SearchingEntity):
+# def query_command(query_phrase: str, searching_entity: SearchingEntity):
+#
+#     da_query = DocumentArray([Document(text=query_phrase)])
+#     da_query.embed(searching_entity.model, collate_fn=searching_entity.collate_fn)
+#
+#     res: List[DocumentArray] = searching_entity.document_array.find(da_query, metric='cosine', limit=3)
+#
+#     answers = []
+#
+#     for doc in res[0]:
+#         answers.append(
+#             ResponseDocs(text=doc.text, similarity=doc.scores.get('cosine_similarity').value, **doc.tags, )
+#         )
+#
+#     return answers
+#
+#
+# def index_command(data: List[BibleFlat], searching_inst: SearchingEntity):
+#     for bible_verse in data:
+#         searching_inst.document_array.append(Document(
+#             text=bible_verse.verse_text,
+#             book_id=bible_verse.book_id,
+#             chapter_id=bible_verse.chapter_id,
+#             verse_id=bible_verse.verse_id
+#         ))
+#
+#     searching_inst.document_array.embed(searching_inst.model, collate_fn=searching_inst.collate_fn)
+#
 
-    da_query = DocumentArray([Document(text=query_phrase)])
-    da_query.embed(searching_entity.model, collate_fn=searching_entity.collate_fn)
+def query_command_sberbank(query_phrase: str, limit: int, searching_entity: SearchingEntity):
+    embedding = searching_entity.get_sentence_embedding(query_phrase)
 
-    res: List[DocumentArray] = searching_entity.indexed_data.find(da_query, metric='cosine', limit=3)
+    query_doc = Document(text=query_phrase, embedding=embedding)
+
+    da_query = DocumentArray([query_doc])
+
+    res = searching_entity.document_array.find(da_query, metric='cosine', limit=limit)
+
+    for r in res[0]:
+        print(f"{r.text} -- {r.id} -- {r.tags} -- {r.scores['cosine_similarity'].value} -- {r.embedding.shape}")
+
 
     answers = []
-
     for doc in res[0]:
+
         answers.append(
-            ResponseDocs(text=doc.text, similarity=doc.scores.get('cosine_similarity').value, **doc.tags, )
-        )
+                ResponseDocs(text=doc.text, similarity=doc.scores.get('cosine_similarity').value, **doc.tags, )
+            )
 
     return answers
 
+def index_data_command_sberbank(bible: Bible, searching_inst: SearchingEntity):
 
-def index_command(data: List[BibleFlat], searching_inst: SearchingEntity):
-    for bible_verse in data:
-        searching_inst.indexed_data.append(Document(
-            text=bible_verse.verse_text,
-            book_id=bible_verse.book_id,
-            chapter_id=bible_verse.chapter_id,
-            verse_id=bible_verse.verse_id
-        ))
+    start = datetime.now()
 
-    searching_inst.indexed_data.embed(searching_inst.model, collate_fn=searching_inst.collate_fn)
+    for b in bible.Books:
+        for c in b.Chapters:
+            for v in c.Verses:
+
+                document: Document = Document(
+                    text=v.Text,
+                    verse_id = v.VerseId,
+                    chapter_id = c.ChapterId,
+                    book_id = b.BookId,
+                    embedding = searching_inst.get_sentence_embedding(v.Text)
+                )
+
+                searching_inst.document_array.append(document)
+                print('.', end='')
+
+    finish = datetime.now()
+    print(f"Time indexed: {finish - start}")
+
+    searching_inst.document_array.summary()
+
+
+
+
 
 

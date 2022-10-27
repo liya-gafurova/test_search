@@ -2,28 +2,32 @@ from typing import Optional
 
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 from starlette import status
+from starlette.background import BackgroundTasks
 from starlette.responses import Response
 
 from app.crud.sources import crud_sources
 from app.deps import get_db, get_searching_instruments, SearchingEntity
-from app.domain.commands import query_command, get_bible, get_small_bible, index_command
-from app.domain.utils import get_file_url, generate_uuid, save_file, read_json,  save_json
+from app.domain.commands import *
+from app.domain.utils import get_file_url, generate_uuid, save_file, read_json, save_json
 from app.schemas import IdType, SourceDB, Bible, BibleFlat
 
 router_source = APIRouter()
+router_indexed = APIRouter()
 router_query = APIRouter()
 
 
-@router_source.post('/delete')
-async def delete_source_data(id: IdType):
-    pass
-
-
 @router_source.get('')
-async def get_all_resources(skip:int = 0, limit: int = 10, db = Depends(get_db)):
+async def get_all_resources(skip: int = 0, limit: int = 10, db=Depends(get_db)):
     sources = crud_sources.get_multi(db=db, skip=skip, limit=limit)
 
     return sources
+
+
+@router_source.get('/{id}')
+async def get_source(id: IdType, db=Depends(get_db)):
+    source = crud_sources.get(db=db, id=id)
+
+    return source
 
 
 @router_source.post('/upload')
@@ -39,34 +43,9 @@ async def upload_source_data(
     return obj
 
 
-@router_source.get('/{id}')
-async def get_source(id: IdType, db = Depends(get_db)):
-    source = crud_sources.get(db=db, id=id)
-
-    return source
-
-
-@router_source.post('/{id}/index')
-async def index_data(id: IdType, db=Depends(get_db), searching_inst = Depends(get_searching_instruments)):
-    small_bible_path = "/home/lia/PycharmProjects/bible_search/data/SMALL_bible_large_20221024232834.json"
-    data: dict = read_json(small_bible_path)
-    bible: Bible = get_bible(data)
-
-    verses = []
-
-    for b in bible.Books:
-        for c in b.Chapters:
-            for v in c.Verses:
-                verses.append(
-                    BibleFlat(verse_text=v.Text, book_id=b.BookId, chapter_id=c.ChapterId, verse_id=v.VerseId)
-                )
-
-    index_command(verses, searching_inst)
-
-
-@router_source.post('/{id}/create/small')
+@router_source.post('/{id}/generate/small')
 async def get_small_bible_version(
-        id: IdType, books_max: int = 10, chapters_max: int = 10, verses_max: int = 10, db=Depends(get_db)
+        id: IdType, books_max: int = 5, chapters_max: int = 5, verses_max: int = 5, db=Depends(get_db)
 ):
     source = crud_sources.get(db, id)
 
@@ -86,17 +65,56 @@ async def get_small_bible_version(
     return new_source
 
 
-@router_source.post('/{id}/indexed/delete')
-async def delete_indexed_data(id: Optional[IdType], searching_inst: SearchingEntity = Depends(get_searching_instruments)):
+@router_source.delete('/delete')
+async def delete_source_data(id: IdType, db = Depends(get_db)):
+    source = crud_sources.get(db=db, id=id)
+    if not source:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-    searching_inst.indexed_data.clear()
-    searching_inst.indexed_data.summary()
+    deleted = crud_sources.remove(db, id)
+
+    return deleted
+
+
+###################################################################################3
+@router_indexed.post('/{id}/index')
+async def index_data(
+        source_id: IdType,
+        background_tasks: BackgroundTasks,
+        db=Depends(get_db),
+        searching_inst=Depends(get_searching_instruments),
+
+):
+    source = crud_sources.get(db=db, id=source_id)
+    if not source:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    data: dict = read_json(source.filepath)
+    bible: Bible = get_bible(data)
+
+    background_tasks.add_task(index_data_command_sberbank, bible, searching_inst)
+
+    return Response(status_code=status.HTTP_202_ACCEPTED)
+
+
+@router_indexed.post('/{id}/indexed/delete')
+async def delete_indexed_data(source_id: Optional[IdType],
+                              searching_inst: SearchingEntity = Depends(get_searching_instruments)):
+    searching_inst.document_array.clear()
+    searching_inst.document_array.summary()
 
     return Response(status_code=status.HTTP_200_OK)
 
 
 @router_query.post('/send')
-async def send_query(query: str, searching_instruments = Depends(get_searching_instruments)):
-    answer = query_command(query, searching_instruments)
+async def send_query(query: str, limit_results: int = 3, searching_instruments=Depends(get_searching_instruments)):
+    answer = query_command_sberbank(query, limit_results, searching_instruments)
 
     return answer
+
+
+@router_indexed.get('/indexed/summary')
+async def get_summary(searching_instruments:SearchingEntity=Depends(get_searching_instruments)):
+    searching_instruments.document_array.summary()
+
+    return {"result":"for testing purposes, see backend console output"}

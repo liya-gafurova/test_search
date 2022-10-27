@@ -1,12 +1,12 @@
 from docarray import Document, DocumentArray
 
-from app.domain.nn import model_rubert, tokenizer_rubert
+from app.domain.nn import *
 from app.domain.utils import create_dir_if_not_exists, read_json
 from app.schemas import Bible
 from app.settings import settings
 
 def collate_fn(da):
-    return tokenizer_rubert(da.texts, return_tensors="pt", truncation=True, padding=True)
+    return tokenizer_sber(da.texts, return_tensors="pt", truncation=True, padding=True)
 
 
 
@@ -30,7 +30,7 @@ def index():
     for id, text in data_json.items():
         document_array.append(Document(text=text, id=id))
 
-    document_array.embed(model_rubert, collate_fn=collate_fn)
+    document_array.embed(model_sber, collate_fn=collate_fn)
 
     print(document_array.summary())
 
@@ -51,7 +51,7 @@ def query(q: str):
     print(document_array.summary())
 
     query = Document(text='бог сказал что будет свет')
-    da_query = DocumentArray([query]).embed(model_rubert, collate_fn=collate_fn)
+    da_query = DocumentArray([query]).embed(model_sber, collate_fn=collate_fn)
 
     res = document_array.find(da_query, metric='cosine', limit=3)
     res[0].summary()
