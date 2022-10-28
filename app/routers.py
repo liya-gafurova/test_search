@@ -77,7 +77,7 @@ async def delete_source_data(id: IdType, db = Depends(get_db)):
 
 
 ###################################################################################3
-@router_indexed.post('/{id}/index')
+@router_indexed.post('/{source_id}/index')
 async def index_data(
         source_id: IdType,
         background_tasks: BackgroundTasks,
@@ -97,7 +97,7 @@ async def index_data(
     return Response(status_code=status.HTTP_202_ACCEPTED)
 
 
-@router_indexed.post('/{id}/indexed/delete')
+@router_indexed.post('/{source_id}/delete')
 async def delete_indexed_data(source_id: Optional[IdType],
                               searching_inst: SearchingEntity = Depends(get_searching_instruments)):
     searching_inst.document_array.clear()
@@ -113,7 +113,7 @@ async def send_query(query: str, limit_results: int = 3, searching_instruments=D
     return answer
 
 
-@router_indexed.get('/indexed/summary')
+@router_indexed.get('/summary')
 async def get_summary(searching_instruments:SearchingEntity=Depends(get_searching_instruments)):
     searching_instruments.document_array.summary()
 
