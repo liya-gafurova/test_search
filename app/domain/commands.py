@@ -4,7 +4,7 @@ from typing import List
 from docarray import DocumentArray, Document
 
 from app.deps import SearchingEntity
-from app.schemas import Bible, Chapter, Book, BibleFlat, ResponseDocs
+from app.schemas import Bible, Chapter, Book, BibleFlat, ResponseDocs, Result
 
 
 def get_bible(bible_json: dict) -> Bible:
@@ -87,15 +87,15 @@ def query_command_sberbank(query_phrase: str, limit: int, searching_entity: Sear
 
     res = searching_entity.document_array.find(da_query, metric='cosine', limit=limit)
 
-    for r in res[0]:
-        print(f"{r.text} -- {r.id} -- {r.tags} -- {r.scores['cosine_similarity'].value} -- {r.embedding.shape}")
+    # for r in res[0]:
+    #     print(f"{r.text} -- {r.id} -- {r.tags} -- {r.scores['cosine_similarity'].value} -- {r.embedding.shape}")
 
 
     answers = []
     for doc in res[0]:
 
         answers.append(
-                ResponseDocs(text=doc.text, similarity=doc.scores.get('cosine_similarity').value, **doc.tags, )
+                Result(text=doc.text, similarity=doc.scores.get('cosine_similarity').value, **doc.tags, )
             )
 
     return answers

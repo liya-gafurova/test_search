@@ -10,5 +10,8 @@ class Settings(BaseSettings):
 
     IP_ADDR = '192.168.88.223'
 
+    ADMIN_USERNAME = 'admin'
+    ADMIN_PASSWORD = '1234'
+
 
 settings = Settings()

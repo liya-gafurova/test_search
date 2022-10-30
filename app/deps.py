@@ -1,12 +1,19 @@
+import secrets
 from typing import Generator
 
 import torch
 from docarray import DocumentArray
+from fastapi import Depends, HTTPException
+from fastapi.security import HTTPBasicCredentials, HTTPBasic
+from starlette import status
 from transformers import AutoModel, AutoTokenizer
 
 from app.db.db import SessionLocal
 from app.domain.nn import model_sber, tokenizer_sber
 from app.domain.storage import document_array_qdrant
+from app.settings import settings
+
+security = HTTPBasic()
 
 
 async def get_db() -> Generator:
@@ -45,3 +52,17 @@ class SearchingEntity:
 
 async def get_searching_instruments() -> SearchingEntity:
     return SearchingEntity()
+
+
+def check_credentials(credentials: HTTPBasicCredentials = Depends(security)):
+    correct_username = secrets.compare_digest(credentials.username, settings.ADMIN_USERNAME)
+    correct_password = secrets.compare_digest(credentials.password, settings.ADMIN_PASSWORD)
+
+    if not (correct_username and correct_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+
+    return credentials.username

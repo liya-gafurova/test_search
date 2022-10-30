@@ -108,9 +108,16 @@ async def delete_indexed_data(source_id: Optional[IdType],
 
 @router_query.post('/send')
 async def send_query(query: str, limit_results: int = 3, searching_instruments=Depends(get_searching_instruments)):
-    answer = query_command_sberbank(query, limit_results, searching_instruments)
+    started = datetime.now()
 
-    return answer
+    answers: List[Result] = query_command_sberbank(query, limit_results, searching_instruments)
+
+    time_processed = datetime.now() - started
+
+    return ResponseDocs(query=query,
+                        time_processed=time_processed,
+                        results_limit=limit_results,
+                        results=answers)
 
 
 @router_indexed.get('/summary')

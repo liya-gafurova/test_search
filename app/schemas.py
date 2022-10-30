@@ -1,5 +1,6 @@
 import uuid
-from typing import Union, Optional
+from datetime import timedelta
+from typing import Union, Optional, List
 
 from pydantic import BaseModel
 from pydantic.schema import datetime
@@ -49,10 +50,18 @@ class BibleFlat(BaseModel):
     verse_text: str
 
 
-class ResponseDocs(BaseModel):
+class Result(BaseModel):
     text: str
     similarity: float
 
     book_id: Optional[int]
     chapter_id: Optional[int]
     verse_id: Optional[int]
+
+
+class ResponseDocs(BaseModel):
+    query: str
+    time_processed: timedelta
+    results_limit: int
+    results: List[Result]
+
