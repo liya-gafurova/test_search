@@ -1,14 +1,38 @@
 from datetime import datetime
+from enum import Enum
 from typing import List
 
 from docarray import DocumentArray, Document
 
-from app.deps import SearchingEntity
+from app.deps import SearchingEntity, EnSearch
 from app.schemas import Bible, Chapter, Book, BibleFlat, ResponseDocs, Result
 
 
-def get_bible(bible_json: dict) -> Bible:
+class Lang(Enum):
+    RUS = 'RUS'
+    EN = 'EN'
+
+
+class Translation(Enum):
+    SYN = 'SYN' # Rus Synodal
+    BBE = 'BBE' # English Basic
+    KJV = 'KJV' # English King James Version
+
+
+rules = {
+    Lang.EN: (Translation.KJV, Translation.BBE),
+    Lang.RUS: (Translation.SYN, )
+}
+
+def get_bible(bible_json: dict, translation = Translation.SYN) -> Bible:
     return Bible.parse_obj(bible_json)
+
+
+def get_en_bible(bible_json: dict, translation=Translation.BBE) -> Bible:
+    en_bible = Bible(Translation=translation.value)
+    for id_book, books in enumerate(bible_json):
+        pass
+
 
 
 def get_small_bible(
@@ -48,35 +72,6 @@ def get_small_bible(
 
     return new_bible_obj
 
-
-# def query_command(query_phrase: str, searching_entity: SearchingEntity):
-#
-#     da_query = DocumentArray([Document(text=query_phrase)])
-#     da_query.embed(searching_entity.model, collate_fn=searching_entity.collate_fn)
-#
-#     res: List[DocumentArray] = searching_entity.document_array.find(da_query, metric='cosine', limit=3)
-#
-#     answers = []
-#
-#     for doc in res[0]:
-#         answers.append(
-#             ResponseDocs(text=doc.text, similarity=doc.scores.get('cosine_similarity').value, **doc.tags, )
-#         )
-#
-#     return answers
-#
-#
-# def index_command(data: List[BibleFlat], searching_inst: SearchingEntity):
-#     for bible_verse in data:
-#         searching_inst.document_array.append(Document(
-#             text=bible_verse.verse_text,
-#             book_id=bible_verse.book_id,
-#             chapter_id=bible_verse.chapter_id,
-#             verse_id=bible_verse.verse_id
-#         ))
-#
-#     searching_inst.document_array.embed(searching_inst.model, collate_fn=searching_inst.collate_fn)
-#
 
 def query_command_sberbank(query_phrase: str, limit: int, searching_entity: SearchingEntity):
     embedding = searching_entity.get_sentence_embedding(query_phrase)
@@ -126,6 +121,26 @@ def index_data_command_sberbank(bible: Bible, searching_inst: SearchingEntity):
 
 
 
+def en_query(q: str, limit:int, search_inst: EnSearch):
+    q_doc = Document(
+        text=q,
+        embedding=search_inst.get_embedding(q)
+    )
+    q_da = DocumentArray([q_doc])
+
+    res = search_inst.da_qdrand_en_bbe.find(q_da, metric='cosine', limit=limit)
+
+    for r in res[0]:
+        print(f"{r.text} -- {r.id} -- {r.tags} -- {r.scores['cosine_similarity'].value} -- {r.embedding.shape}")
+
+    answers = []
+    for doc in res[0]:
+
+        answers.append(
+                Result(text=doc.text, similarity=doc.scores.get('cosine_similarity').value, **doc.tags, )
+            )
+
+    return answers
 
 
 

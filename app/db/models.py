@@ -9,3 +9,6 @@ class Sources(Base):
     name = Column(String(200))
     filepath = Column(String(200))
     created = Column(DateTime(timezone=True), server_default=sql.func.now())
+
+    lang = Column(String(15))
+    translation_type = Column(String(15))

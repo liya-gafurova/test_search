@@ -13,6 +13,8 @@ class SourceDB(BaseModel):
     name: Optional[str]
     filepath: str
     created: Optional[datetime]
+    lang: Optional[str]
+    translation_type: Optional[str]
 
     class Config:
         orm_mode=True
@@ -64,4 +66,3 @@ class ResponseDocs(BaseModel):
     time_processed: timedelta
     results_limit: int
     results: List[Result]
-

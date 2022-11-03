@@ -9,8 +9,8 @@ from starlette import status
 from transformers import AutoModel, AutoTokenizer
 
 from app.db.db import SessionLocal
-from app.domain.nn import model_sber, tokenizer_sber
-from app.domain.storage import document_array_qdrant
+from app.domain.nn import model_sber, tokenizer_sber, sentence_embeds_en
+from app.domain.storage import document_array_qdrant, da_qdrand_en_bbe
 from app.settings import settings
 
 security = HTTPBasic()
@@ -52,6 +52,28 @@ class SearchingEntity:
 
 async def get_searching_instruments() -> SearchingEntity:
     return SearchingEntity()
+
+class EnSearch:
+    model = sentence_embeds_en
+    da_qdrand_en_bbe = da_qdrand_en_bbe
+
+    def get_embedding(self, sentence):
+        embed = self.model.encode([sentence])
+
+        return embed
+async def en_search_inst() -> EnSearch:
+    return EnSearch()
+
+class EnKJVSearch:
+    model = sentence_embeds_en
+    da_qdrand_en_bbe = da_qdrand_en_bbe
+
+    def get_embedding(self, sentence):
+        embed = self.model.encode([sentence])
+
+        return embed
+async def en_search_inst() -> EnSearch:
+    return EnSearch()
 
 
 def check_credentials(credentials: HTTPBasicCredentials = Depends(security)):

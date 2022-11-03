@@ -23,4 +23,9 @@ https://colab.research.google.com/drive/18Wmff6hIVyDaMgIP8tYI47ruez9Z6-Um?usp=sh
 
 indexing time for 30 000 verses -- +2h
 
+# English
+
+https://github.com/thiagobodruk/bible -- Source
+
+
 
