@@ -17,6 +17,18 @@ da_qdrand_en_kjv = DocumentArray(
     },
 )
 
+da_qdrand_en_bbe = DocumentArray(
+    storage='qdrant',
+    config={
+        'collection_name': 'EN_BBE',
+        'host': settings.IP_ADDR,
+        'port': '6333',
+        'n_dim': 768,
+        'columns': {'text': 'str', 'book_id': 'int', 'chapter_id': 'int', 'verse_id': 'int'}
+    },
+)
+
+
 
 class EnSearch:
     model = SentenceTransformer(settings.EN_MODEL)
@@ -28,7 +40,7 @@ class EnSearch:
 
 search_inst = EnSearch()
 
-def index_en_data(filepath):
+def index_en_data(filepath, qdrant):
 
     data = read_json(filepath)
 
@@ -46,31 +58,41 @@ def index_en_data(filepath):
                     embedding=search_inst.get_embedding(verse)
                 )
 
-                da_qdrand_en_kjv.append(doc)
+                qdrant.append(doc)
 
-        if i > 0: break
 
     finish = datetime.now()
     print(f"Time indexed: {finish - start}")
 
-    da_qdrand_en_kjv.summary()
+    qdrant.summary()
 
-def query(q: str):
+def query(q: str, qdrant):
     q_doc = Document(
         text=q,
         embedding=search_inst.get_embedding(q)
     )
     q_da = DocumentArray([q_doc])
 
-    res = da_qdrand_en_kjv.find(q_da, metric='cosine', limit=3)
+    res = qdrant.find(q_da, metric='cosine', limit=3)
 
     for r in res[0]:
         print(f"{r.text} -- {r.id} -- {r.tags} -- {r.scores['cosine_similarity'].value} -- {r.embedding.shape}")
 
 
-path = '/home/lia/PycharmProjects/bible_search/data/en_kjv_202211310313.json'
+path1 = '/home/lia/PycharmProjects/bible_search/data/en_kjv_202211310313.json'
+path2 = '/home/lia/PycharmProjects/bible_search/data/en_bbe_2022113103552.json'
+paths = [path1, path2]
 #
-index_en_data(path)
+
+qdrants = [da_qdrand_en_kjv, da_qdrand_en_bbe]
+
+for path, qd in zip(paths, qdrants):
+    index_en_data(path, qd)
+
+    print(f'Done {path}')
+
+
+
 
 # query('god created heaven and earth')
 

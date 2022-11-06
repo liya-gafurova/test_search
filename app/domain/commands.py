@@ -121,14 +121,14 @@ def index_data_command_sberbank(bible: Bible, searching_inst: SearchingEntity):
 
 
 
-def en_query(q: str, limit:int, search_inst: EnSearch):
+def en_query(q: str, limit:int, search_inst):
     q_doc = Document(
         text=q,
         embedding=search_inst.get_embedding(q)
     )
     q_da = DocumentArray([q_doc])
 
-    res = search_inst.da_qdrand_en_bbe.find(q_da, metric='cosine', limit=limit)
+    res = search_inst.da_qdrand_en_kjv.find(q_da, metric='cosine', limit=limit)
 
     for r in res[0]:
         print(f"{r.text} -- {r.id} -- {r.tags} -- {r.scores['cosine_similarity'].value} -- {r.embedding.shape}")

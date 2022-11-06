@@ -6,7 +6,7 @@ from starlette.background import BackgroundTasks
 from starlette.responses import Response
 
 from app.crud.sources import crud_sources
-from app.deps import get_db, get_searching_instruments, SearchingEntity, en_search_inst
+from app.deps import get_db, get_searching_instruments, SearchingEntity, en_search_inst, en_kjv_search_inst
 from app.domain.commands import *
 from app.domain.utils import get_file_url, generate_uuid, save_file, read_json, save_json
 from app.schemas import IdType, SourceDB, Bible, BibleFlat
@@ -154,7 +154,7 @@ async def send_query(query: str, limit_results: int = 3, searching_instruments=D
                         results=answers)
 
 @router_query.post('/en/kjv/send')
-async def send_query(query: str, limit_results: int = 3, searching_instruments=Depends(en_search_inst)):
+async def send_query(query: str, limit_results: int = 3, searching_instruments=Depends(en_kjv_search_inst)):
     print(query)
     started = datetime.now()
 
