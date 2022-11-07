@@ -9,10 +9,13 @@ class Settings(BaseSettings):
     EN_MODEL = 'sentence-transformers/all-mpnet-base-v2'
     COLLECTION_NAME = 'bible_large'
 
-    IP_ADDR = '192.168.88.223'
+    IP_ADDR: str
 
-    ADMIN_USERNAME = 'admin'
-    ADMIN_PASSWORD = '1234'
+    ADMIN_USERNAME: str
+    ADMIN_PASSWORD: str
+
+    class Config:
+        env_file='.env'
 
 
 settings = Settings()

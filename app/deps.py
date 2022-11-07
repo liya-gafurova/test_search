@@ -55,7 +55,7 @@ async def get_searching_instruments() -> SearchingEntity:
 
 class EnSearch:
     model = sentence_embeds_en
-    da_qdrand_en_bbe = da_qdrand_en_bbe
+    da = da_qdrand_en_bbe
 
     def get_embedding(self, sentence):
         embed = self.model.encode([sentence])
@@ -66,7 +66,7 @@ async def en_search_inst() -> EnSearch:
 
 class EnKJVSearch:
     model = sentence_embeds_en
-    da_qdrand_en_kjv = da_qdrand_en_kjv
+    da = da_qdrand_en_kjv
 
 
     def get_embedding(self, sentence):

@@ -15,6 +15,7 @@ router_source = APIRouter()
 router_indexed = APIRouter()
 router_query = APIRouter()
 
+logger = log.get_logger(__name__)
 
 @router_source.get('')
 async def get_all_resources(skip: int = 0, limit: int = 10, db=Depends(get_db)):
@@ -127,7 +128,7 @@ async def delete_indexed_data(source_id: Optional[IdType],
 
 @router_query.post('/ru/send')
 async def send_query(query: str, limit_results: int = 3, searching_instruments=Depends(get_searching_instruments)):
-    print(query)
+    logger.info(query)
     started = datetime.now()
 
     answers: List[Result] = query_command_sberbank(query, limit_results, searching_instruments)
@@ -141,7 +142,7 @@ async def send_query(query: str, limit_results: int = 3, searching_instruments=D
 
 @router_query.post('/en/bbe/send')
 async def send_query(query: str, limit_results: int = 3, searching_instruments=Depends(en_search_inst)):
-    print(query)
+    logger.info(query)
     started = datetime.now()
 
     answers: List[Result] = en_query(query, limit_results, searching_instruments)
@@ -155,7 +156,7 @@ async def send_query(query: str, limit_results: int = 3, searching_instruments=D
 
 @router_query.post('/en/kjv/send')
 async def send_query(query: str, limit_results: int = 3, searching_instruments=Depends(en_kjv_search_inst)):
-    print(query)
+    logger.info(query)
     started = datetime.now()
 
     answers: List[Result] = en_query(query, limit_results, searching_instruments)

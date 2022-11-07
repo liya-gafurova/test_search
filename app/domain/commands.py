@@ -4,9 +4,12 @@ from typing import List
 
 from docarray import DocumentArray, Document
 
+from app import log
 from app.deps import SearchingEntity, EnSearch
 from app.schemas import Bible, Chapter, Book, BibleFlat, ResponseDocs, Result
 
+
+logger = log.get_logger(__name__)
 
 class Lang(Enum):
     RUS = 'RUS'
@@ -82,8 +85,8 @@ def query_command_sberbank(query_phrase: str, limit: int, searching_entity: Sear
 
     res = searching_entity.document_array.find(da_query, metric='cosine', limit=limit)
 
-    # for r in res[0]:
-    #     print(f"{r.text} -- {r.id} -- {r.tags} -- {r.scores['cosine_similarity'].value} -- {r.embedding.shape}")
+    for r in res[0]:
+        logger.info(f"{r.text} -- {r.id} -- {r.tags} -- {r.scores['cosine_similarity'].value} -- {r.embedding.shape}")
 
 
     answers = []
@@ -112,10 +115,9 @@ def index_data_command_sberbank(bible: Bible, searching_inst: SearchingEntity):
                 )
 
                 searching_inst.document_array.append(document)
-                print('.', end='')
 
     finish = datetime.now()
-    print(f"Time indexed: {finish - start}")
+    logger.info(f"Time indexed: {finish - start}")
 
     searching_inst.document_array.summary()
 
@@ -128,10 +130,10 @@ def en_query(q: str, limit:int, search_inst):
     )
     q_da = DocumentArray([q_doc])
 
-    res = search_inst.da_qdrand_en_kjv.find(q_da, metric='cosine', limit=limit)
+    res = search_inst.da.find(q_da, metric='cosine', limit=limit)
 
     for r in res[0]:
-        print(f"{r.text} -- {r.id} -- {r.tags} -- {r.scores['cosine_similarity'].value} -- {r.embedding.shape}")
+        logger.info(f"{r.text} -- {r.id} -- {r.tags} -- {r.scores['cosine_similarity'].value} -- {r.embedding.shape}")
 
     answers = []
     for doc in res[0]:
