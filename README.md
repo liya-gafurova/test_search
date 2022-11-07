@@ -26,6 +26,5 @@ indexing time for 30 000 verses -- +2h
 # English
 
 https://github.com/thiagobodruk/bible -- Source
-
-
+https://github.com/bibleapi/bibleapi-bibles-json 
 

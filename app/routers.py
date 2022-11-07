@@ -126,7 +126,7 @@ async def delete_indexed_data(source_id: Optional[IdType],
     return Response(status_code=status.HTTP_200_OK)
 
 
-@router_query.post('/ru/send')
+@router_query.post('/ru/rst/send')
 async def send_query(query: str, limit_results: int = 3, searching_instruments=Depends(get_searching_instruments)):
     logger.info(query)
     started = datetime.now()
