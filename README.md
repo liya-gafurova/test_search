@@ -24,7 +24,10 @@ https://colab.research.google.com/drive/18Wmff6hIVyDaMgIP8tYI47ruez9Z6-Um?usp=sh
 indexing time for 30 000 verses -- +2h
 
 # English
-
+https://gist.github.com/a1ip/0a5ec1b89e79b4490ef5992a80e72eeb -- russian synodal translation
 https://github.com/thiagobodruk/bible -- Source
 https://github.com/bibleapi/bibleapi-bibles-json 
 
+# Speech To Text
+
+https://colab.research.google.com/drive/18Wmff6hIVyDaMgIP8tYI47ruez9Z6-Um?usp=sharing#scrollTo=Wu6VSKMDl564
