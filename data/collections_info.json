@@ -2,9 +2,9 @@
   "result": {
     "status": "green",
     "optimizer_status": "ok",
-    "vectors_count": 1794,
+    "vectors_count": 442,
     "indexed_vectors_count": 0,
-    "points_count": 1794,
+    "points_count": 442,
     "segments_count": 8,
     "config": {
       "params": {
@@ -38,8 +38,20 @@
         "wal_segments_ahead": 0
       }
     },
-    "payload_schema": {}
+    "payload_schema": {
+      "text": {
+        "data_type": "text",
+        "params": {
+          "type": "text",
+          "tokenizer": "word",
+          "min_token_len": 2,
+          "max_token_len": 15,
+          "lowercase": true
+        },
+        "points": 442
+      }
+    }
   },
   "status": "ok",
-  "time": 0.00002661
+  "time": 0.00004854
 }

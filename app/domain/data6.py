@@ -215,12 +215,13 @@ def query_native_with_filters(query):
     results = client.search(
         collection_name = COLLECTION_NAME2,
         query_vector=query_vector,
+        limit=100,
         query_filter=models.Filter(
             should=[
                 models.FieldCondition(
                     key="text",
-                    match=models.MatchValue(
-                        value='небо', ## чтобы найти соотвествие с текстом из базы, надо передать поле (стих) полностью
+                    match=models.MatchText(
+                        text = query, ## чтобы найти соотвествие с текстом из базы, надо передать поле (стих) полностью
                     ),
                 )
             ]
@@ -229,7 +230,52 @@ def query_native_with_filters(query):
 
     print(results)
 
-query_native_with_filters('И отложился Моав от Израиля по смерти Ахава.')
+# query_native_with_filters('Богу')
+
+# 3.4 query and add full text index
+
+def full_text_index():
+    info = client.create_payload_index(
+        collection_name=COLLECTION_NAME2,
+        field_name="text",
+        field_schema=models.TextIndexParams(
+            type="text",
+            tokenizer=models.TokenizerType.WORD,
+            min_token_len=2,
+            max_token_len=15,
+            lowercase=True,
+        )
+    )
+    print(info)
+    return info
+def test(query):
+    query_vector = model.get_embedding(query)
+
+    results = client.search(
+        collection_name=COLLECTION_NAME2,
+        query_vector=query_vector,
+        limit=100,
+        query_filter=models.Filter(
+            should=[
+                models.FieldCondition(
+                    key="text",
+                    match=models.MatchText(
+                        text='Бог',  ## чтобы найти соотвествие с текстом из базы, надо передать поле (стих) полностью
+                    ),
+                )
+            ]
+        ),
+    )
+
+    print(results)
+
+# full_text_index()
+test('небо и земля')
+# for query in ['Богу', "Моисей", "Бог сотворил небо и землю"]:
+#     query_native_with_filters(query)
+#     test(query)
+#
+
 
 # 3.2 query full-text match
 
