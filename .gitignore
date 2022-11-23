@@ -1,0 +1,5 @@
+.idea
+.env
+common_db.db
+.gitignore
+__pycache__

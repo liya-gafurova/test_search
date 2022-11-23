@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     ADMIN_USERNAME: str
     ADMIN_PASSWORD: str
 
+    APP_TOKEN = '9ab882b1d635e2a7b6bc9169cb6b3f77f82362d11536622c5b5a488eade07188'
+
     class Config:
         env_file='.env'
 

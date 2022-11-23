@@ -3,9 +3,10 @@ from typing import Generator
 
 import torch
 from docarray import DocumentArray
-from fastapi import Depends, HTTPException
-from fastapi.security import HTTPBasicCredentials, HTTPBasic
+from fastapi import Depends, HTTPException, Header, Security
+from fastapi.security import HTTPBasicCredentials, HTTPBasic, APIKeyHeader
 from starlette import status
+from starlette.status import HTTP_403_FORBIDDEN
 from transformers import AutoModel, AutoTokenizer
 
 from app.db.db import SessionLocal
@@ -89,3 +90,22 @@ def check_credentials(credentials: HTTPBasicCredentials = Depends(security)):
         )
 
     return credentials.username
+
+
+API_KEY = "9ab882b1d635e2a7b6bc9169cb6b3f77f82362d11536622c5b5a488eade07188"
+API_KEY_NAME = "X-API-KEY"
+
+
+api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
+
+async def get_api_key(
+    api_key_header: str = Security(api_key_header),
+):
+    if api_key_header == API_KEY:
+        return api_key_header
+    else:
+        raise HTTPException(
+            status_code=HTTP_403_FORBIDDEN, detail="Could not validate credentials"
+        )
+
+

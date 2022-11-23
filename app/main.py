@@ -4,16 +4,16 @@ from fastapi import FastAPI, Depends
 from app import log
 from app.db.base_class import Base
 from app.db.db import engine
-from app.deps import check_credentials
+from app.deps import check_credentials, get_api_key
 from app.routers import router_source, router_query, router_indexed
 
 logger = log.get_logger(__name__)
 
 app = FastAPI()
 
-app.include_router(router_source, prefix='/source', tags=['Source Texts'], dependencies=[Depends(check_credentials)])
-app.include_router(router_query, prefix='/query', tags=['Queries'])
-app.include_router(router_indexed, prefix='/indexed', tags=['Indexed data'], dependencies=[Depends(check_credentials)])
+app.include_router(router_source, prefix='/source', tags=['Source Texts'],) #  dependencies=[Depends(check_credentials)]
+app.include_router(router_query, prefix='/query', tags=['Queries'], dependencies=[Depends(get_api_key)])
+app.include_router(router_indexed, prefix='/indexed', tags=['Indexed data']) #  dependencies=[Depends(check_credentials)]
 
 
 @app.on_event('startup')
