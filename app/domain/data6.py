@@ -73,7 +73,7 @@ def create_semantic_vector(filepath):
 
     bible = Bible.parse_raw(data_raw)
 
-    for b in bible.Books:
+    for i, b in enumerate(bible.Books):
         for c in b.Chapters:
             for v in c.Verses:
                 document: Document = Document(
@@ -85,6 +85,7 @@ def create_semantic_vector(filepath):
                 )
 
                 da.append(document)
+        if i> 1: break
 
     da.summary()
 
@@ -270,14 +271,107 @@ def test(query):
     print(results)
 
 # full_text_index()
-test('небо и земля')
+# test('небо и земля')
+
+
 # for query in ['Богу', "Моисей", "Бог сотворил небо и землю"]:
 #     query_native_with_filters(query)
 #     test(query)
 #
 
 
-# 3.2 query full-text match
+###
+# Reindex Docarray index
+###
+def refill_text():
+    results = client.scroll(
+        collection_name=COLLECTION_NAME,
+        scroll_filter=models.Filter(
+            must=[
+                models.FieldCondition(
+                    key="book_id",
+                    match=models.MatchValue(value=1)
+                ),
+            ]
+        ),
+        limit=1000,
+        with_payload=True,
+    )
+
+    for res in results[0]:
+        print(res)
+        payload = res.payload
+        bts = base64.b64decode(payload['_serialized'])
+        bstr = decompress_bytes(bts)
+        data  = pickle.loads(bstr)
+
+        client.set_payload(
+            collection_name=COLLECTION_NAME,
+            payload={
+                "text": data.text,
+            },
+            points=[data.id],
+        )
+
+def add_index():
+    # same as full_text_index()
+    info = client.create_payload_index(
+        collection_name=COLLECTION_NAME,
+        field_name="text",
+        field_schema=models.TextIndexParams(
+            type="text",
+            tokenizer=models.TokenizerType.WORD,
+            min_token_len=2,
+            max_token_len=15,
+            lowercase=True,
+        )
+    )
+    print(info)
+    return info
+
+def query_data_with_text(query: str):
+    query_doc = Document(text = query, embedding=model.get_embedding(query))
+    query_da = DocumentArray([query_doc])
+
+    results = da.find(query_da, filter=models.Filter(
+            should=[
+                models.FieldCondition(
+                    key="text",
+                    match=models.MatchText(
+                        text = 'бог земля', ## чтобы найти соотвествие с текстом из базы, надо передать поле (стих) полностью
+                    ),
+                )
+            ]
+        ), metric='cosine', limit=5)
+
+    for r in results[0]:
+        print(f"{r.text} -- {r.id} -- {r.scores} -- {r.embedding.shape}")
+        print(r.tags)
+# add_index()
+
+query_data_with_text("Бог сотворил небо и землю")
+
+"""
+можно подключить поиск по ключевым словам:
+
+1. прямое вхождение подстроки
+
+для того, что добавить фильтрацию по подстроке, надо добавить поле payload.text для непосредсвенного хранения в qdrant
+сейчас из-за использования docarray текст не созраняется в payload.text, но сохраняется payload._serialized в сериализованном
+виде (сериализуется целый обьект docarray.Document). 
+
+1.1. Чтобы решить эту проблему надо перенести поле Document.text в payload.text  -- единоразовая переиндексация
+ (последующей индексации в случае сохранения docarray оставить текст  в поле, название которого отличается от text - например, verse)
+
+1.2. после этой единоразовой переиндексации можно будет делать запросы через функционал docarray с дополнительным фильтром
+  и получить фильтрацию по подстроке
 
 
+2. контекстный поиск
 
+для полноценного контекстного поиска нужно сделать индексацию данных с помощью fulltex index
+
+- в качестве базовых данных можно сипользовать данные с пункта 1.1 (послелующая индексация  text -> verse)
+- также можно использовать данные, полученные индексацией данных без использования docarray
+
+"""
