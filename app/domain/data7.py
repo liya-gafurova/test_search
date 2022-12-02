@@ -266,3 +266,20 @@ results = client.scroll(
 )
 
 print(results)
+
+results = client.scroll(
+    collection_name=COLLECTION_NAME,
+    scroll_filter=models.Filter(
+        must=[
+            models.FieldCondition(
+                key="verse",
+                match=models.MatchText(text='Бог')
+            )
+        ],
+    ),
+    limit=10,
+    with_payload=True,
+    with_vectors=False,
+)
+
+print(results)
